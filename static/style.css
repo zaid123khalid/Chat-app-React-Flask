@@ -1,0 +1,31 @@
+#msgBox{
+    width: 100%;
+    position: absolute;
+    bottom: 0;
+
+}#message{
+    height: 30px;
+    width: 70%;
+    padding: 5px;
+}
+#message:hover{
+    border-radius: 5px;
+}#sendMsgBtn{height: 30px;
+    width: 15%;
+    
+}
+#sendMsgBtn:hover{
+    color: aliceblue;
+    background-color: #1e90ff;
+}
+#usernameForm{
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%,-50%);
+    width: 50%;
+    height: 50%;
+    border-radius: 5px;
+    padding: 10px;
+    text-align: center;
+}

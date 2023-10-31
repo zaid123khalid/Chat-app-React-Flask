@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.1.0/socket.io.js"></script>
+    <link rel="stylesheet" href="{{url_for('static', filename='style.css')}}">
+    <title>Flask Chat</title>
+</head>
+<body>
+    <div id="messages"></div>
+    <div id="msgBox">
+        <input type="text" id="message" placeholder="Type Your Message Here: ">
+        <input id="sendMsgBtn" type="submit" value="Send" onclick="sendMessage()">
+    </div>
+
+    <script>
+        console.log();
+        var socket = io.connect('http://192.168.100.10:5000');
+        socket.on('connect', function() {
+            socket.emit('join', {
+                username: "{{username}}"
+            });
+        });
+        
+
+        socket.on('recieved_msg', function(msg) {
+            createMessage(msg['username'],msg['msg']);
+        });
+
+        var messages =document.getElementById('messages');
+
+        function createMessage(name, msg){
+          content =  `
+            <div class="text">
+                <span>
+                    <strong>${name}</strong>: ${msg}
+                </span>
+            </div>
+            `
+            messages.innerHTML += content;
+        }
+
+        function sendMessage(){
+            var msg = document.getElementById('message').value;
+            socket.emit('message', {username:"{{username}}", msg:msg});
+            createMessage("{{username}}", msg);
+            document.getElementById('message').value = '';
+            return false;
+        }
+    </script>
+</body>
+</html>
