@@ -7,23 +7,17 @@ socket = SocketIO(app)
 
 clients = []
 
-
 @socket.on('join')
 def test_connect(data):
     clients.append(request.sid)
-    print('Client connected ' + request.sid)
-    print(clients)
 
 @socket.on('disconnect')
 def test_disconnect():
     clients.remove(request.sid)
-    print('Client disconnected ' + request.sid)
-    print(clients)
 
 
 @socket.on('message')
 def handle_message(message):
-    print('received message: ' + message['msg'] + ' from ' + message['username'])
     emit('recieved_msg', message, broadcast=True, to=clients, include_self=False)
 
 

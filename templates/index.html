@@ -1,33 +1,24 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="{{url_for('static', filename='style.css')}}">
-    <title>Index</title>
-</head>
-<body>
+{% extends "base.html" %}
+{% block title %}Index{% endblock %}
+{% block content %}
 <div id="usernameForm">
 <form action="/chat" method="post" onsubmit="return submitName()" name="myForm">
     <input type="text" name="name" id="name" placeholder="Enter Your Username">
-    <input type="submit" value="Submit">
+    <input type="submit" value="Continue">
 </form>
 </div>
 <script>
 
     function submitName(){
     var name = document.forms['myForm']['name'].value;
-
       if (name == ''){
         alert('Please enter a name');
         return false;
         }
-
         else {
-
             return true;
         }
     }
 </script>
-</body>
+{% endblock %}
 </html>
