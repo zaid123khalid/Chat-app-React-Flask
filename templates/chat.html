@@ -5,25 +5,20 @@
 {% block title %}Flask Chat{% endblock %}
 {% block content %}
     <div id="messages" style="word-wrap: break-word;"></div>
-    <div id="msgBox">
-        <input type="text" id="message" placeholder="Type Your Message Here: " rows="3">
-        <input id="sendMsgBtn" type="submit" value="Send" onclick="sendMessage()">
+    <div class="input-with-button" id="msgBox">
+        <input type="text" id="message" placeholder="Type Your Message Here" onkeypress="checkKeyPress(event)">
+        <button id="sendMsgBtn" type="button" onclick="sendMessage()">Send</button>
     </div>
 
     <script>
-        var socket = io.connect('http://192.168.100.10:5000');
-        socket.on('connect', function() {
-            socket.emit('join', {
-                username: "{{username}}",
-            });
-        });
-        
+        var socket = io('http://192.168.100.10:5000');
+        socket.connect();
 
         socket.on('recieved_msg', function(msg) {
             createMessage(msg['username'],msg['msg']);
         });
 
-        var messages =document.getElementById('messages');
+        var messages = document.getElementById('messages');
 
         function createMessage(name, msg){
           content =  `
@@ -38,11 +33,29 @@
 
         function sendMessage(){
             var msg = document.getElementById('message').value;
-            socket.emit('message', {username:"{{username}}", msg:msg});
-            createMessage("{{username}}", msg);
-            document.getElementById('message').value = '';
-            return false;
+            if (msg == '') {
+                return false;
+            } else {
+                socket.emit('message', {username:"{{username}}", msg:msg});
+                createMessage("{{username}}", msg);
+                document.getElementById('message').value = '';
+                return false;
+            }
         }
+
+        function checkKeyPress(event) {
+        if (event.keyCode === 13) { 
+            sendMessage();
+        }
+    }
     </script>
+{% for message in messages %}
+    <script>
+        createMessage("{{message['username']}}", "{{message['msg']}}");
+    </script>
+
+{% endfor %}
 {% endblock %}
+
+
 </html>

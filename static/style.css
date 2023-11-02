@@ -1,23 +1,31 @@
-#msgBox{
-    width: 100%;
-    position: absolute;
-    bottom: 0;
-
-}#message{
+#message{
     height: 30px;
-    width: 70%;
+    width: 80%;
     padding: 5px;
+    flex: 1; 
+    padding: 5px;
+    margin-right: 5px;
 }
+
 #message:hover{
     border-radius: 5px;
-}#sendMsgBtn{height: 30px;
-    width: 15%;
-    
 }
+
+#sendMsgBtn{
+    height: 40px;
+    padding: 5px 10px;  
+    background-color: #007bff;  
+    color: #fff;  
+    border: none;  
+    cursor: pointer;
+    margin-right: 15px;
+}
+
 #sendMsgBtn:hover{
     color: aliceblue;
     background-color: #1e90ff;
 }
+
 #usernameForm{
     position: absolute;
     top: 50%;
@@ -27,5 +35,15 @@
     height: 50%;
     border-radius: 5px;
     padding: 10px;
-    text-align: center;
+}
+
+.input-with-button {
+    display: flex;
+    align-items: center;
+    width: 100%;
+    position: absolute;
+    bottom: 0;
+}
+#name, #room-code, #submit-btn{
+    margin-bottom: 5px;
 }
