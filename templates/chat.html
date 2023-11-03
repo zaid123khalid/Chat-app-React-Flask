@@ -11,11 +11,15 @@
     </div>
 
     <script>
-        var socket = io('http://192.168.100.10:5000');
+        var socket = io.connect('http://192.168.100.8:5000');
+        
         socket.connect();
+        socket.on('connect', function() {
+            socket.emit('join', {});
+        });
 
-        socket.on('recieved_msg', function(msg) {
-            createMessage(msg['username'],msg['msg']);
+        socket.on('recieved_msg', function(data) {
+            createMessage(data.username, data.msg);
         });
 
         var messages = document.getElementById('messages');
