@@ -2,15 +2,15 @@
 {% block title %}Index{% endblock %}
 {% block content %}
 <div id="usernameForm">
-<form  method="post" name="myForm" style="display: flex; flex-direction: column; align-items: center;">
-    <input type="text" name="room-code" id="room-code" placeholder="Enter Room Code">
-    <input type="text" name="name" id="name" placeholder="Enter Your Username">
-    <button type="submit" name="Join" class="Join-btn">Join a Room</button>
-    <button type="submit" name="create" class="create-btn">Create a Room</button>
-    {% if error %}
-        <p class="error" style="color: red;"><strong>Error:</strong> {{ error }}</p>
-    {% endif %}
-</form>
+    <form method="post" name="myForm" style="display: flex; flex-direction: column; align-items: center;">
+        <input type="text" name="room-code" id="room-code" placeholder="Enter Room Code">
+        <input type="text" name="name" id="name" placeholder="Enter Your Username">
+        <button type="submit" name="Join" class="join-btn" onclick="joinRoom()">Join a Room</button>
+        <button type="submit" name="create" class="create-btn" onclick="createRoom()">Create a Room</button>
+        {% if error %}
+            <p class="error" style="color: red;"><strong>Error:</strong> {{ error }}</p>
+        {% endif %}
+    </form>
 </div>
 {% endblock %}
 </html>

@@ -1,21 +1,32 @@
 {% extends "base.html" %}
 {% block script %}
     <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.1.0/socket.io.js"></script>
-{% endblock %}
+{% endblock %} 
 {% block title %}Flask Chat{% endblock %}
 {% block content %}
-    <div id="messages" style="word-wrap: break-word;"></div>
+    <div id="messages" style="word-wrap: break-word;
+    max-height: calc(100vh - 45px);
+    overflow: hidden;
+    overflow-y: scroll;"></div>
     <div class="input-with-button" id="msgBox">
         <input type="text" id="message" placeholder="Type Your Message Here" onkeypress="checkKeyPress(event)">
         <button id="sendMsgBtn" type="button" onclick="sendMessage()">Send</button>
     </div>
 
     <script>
+        window.addEventListener('beforeunload', () => {
+            socket.emit('leave', {
+                room_code: "{{room}}"
+            });
+        });
         var socket = io.connect('http://192.168.100.8:5000');
         
         socket.connect();
         socket.on('connect', function() {
-            socket.emit('join', {});
+            socket.emit('join', {
+                username: "{{username}}",
+                room_code: "{{room}}"
+            });
         });
 
         socket.on('recieved_msg', function(data) {
@@ -23,15 +34,12 @@
         });
 
         var messages = document.getElementById('messages');
-
         function createMessage(name, msg){
-          content =  `
-            <div class="text" style="margin-bottom:5px; padding: 10px; background-color: rgb(221, 201, 201);">
+         content =`<div class="text" style="padding: 7px; background-color: rgb(221, 201, 201);">
                 <span>
                    <strong>${name}</strong><br>${msg}
                 </span>
-            </div><br>
-            `
+            </div><br>`
             messages.innerHTML += content;
         }
 
@@ -40,7 +48,7 @@
             if (msg == '') {
                 return false;
             } else {
-                socket.emit('message', {username:"{{username}}", msg:msg});
+                socket.emit('message', {username:"{{username}}", msg:msg, room_code:"{{room}}"});
                 createMessage("{{username}}", msg);
                 document.getElementById('message').value = '';
                 return false;
@@ -57,9 +65,6 @@
     <script>
         createMessage("{{message['username']}}", "{{message['msg']}}");
     </script>
-
 {% endfor %}
 {% endblock %}
-
-
 </html>
