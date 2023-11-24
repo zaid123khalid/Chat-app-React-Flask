@@ -4,10 +4,7 @@
 {% endblock %} 
 {% block title %}Flask Chat{% endblock %}
 {% block content %}
-    <div id="messages" style="word-wrap: break-word;
-    max-height: calc(100vh - 45px);
-    overflow: hidden;
-    overflow-y: scroll;"></div>
+    <div class ="messages-container" id="messages"></div>
     <div class="input-with-button" id="msgBox">
         <input type="text" id="message" placeholder="Type Your Message Here" onkeypress="checkKeyPress(event)">
         <button id="sendMsgBtn" type="button" onclick="sendMessage()">Send</button>
@@ -19,7 +16,7 @@
                 room_code: "{{room}}"
             });
         });
-        var socket = io.connect('http://192.168.100.8:5000');
+        var socket = io.connect('http://192.168.100.7:5000');
         
         socket.connect();
         socket.on('connect', function() {
@@ -35,11 +32,19 @@
 
         var messages = document.getElementById('messages');
         function createMessage(name, msg){
-         content =`<div class="text" style="padding: 7px; background-color: rgb(221, 201, 201);">
+            if (name == "{{username}}") {
+                var content =`<div class="messages sender">
+                <span>
+                   <strong>${name}</strong><br>${msg}
+                </span> 
+            </div><br>`
+            } else{
+            var content =`<div class="messages receiver">
                 <span>
                    <strong>${name}</strong><br>${msg}
                 </span>
-            </div><br>`
+            </div><br>`}
+
             messages.innerHTML += content;
         }
 

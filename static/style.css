@@ -5,11 +5,11 @@
     flex: 1; 
     padding: 5px;
     margin-right: 5px;
+    border-radius: 10px;
 }
-
 #message:hover{
-    border-radius: 5px;
-    
+    border-radius: 10px;
+    border-width: 3px;
 }
 
 #sendMsgBtn{
@@ -20,6 +20,7 @@
     border: none;  
     cursor: pointer;
     margin-right: 15px;
+    border-radius: 15px;
 }
 
 #sendMsgBtn:hover{
@@ -49,3 +50,31 @@
 #name, #room-code, #submit-btn{
     margin-bottom: 5px;
 }
+
+
+.messages {
+    max-width: 80%;
+    padding: 8px;
+    margin: 8px;
+    border-radius: 8px;
+  }
+
+  .sender {
+    width: fit-content;
+    align-items: end;
+    align-self: flex-end;
+    background-color: #4CAF50;
+    place-content: flex-end;
+  }
+
+  .receiver {
+    align-self: flex-start;align-items: end;
+    background-color: #ddd;width: fit-content;
+  }
+
+  .messages-container {
+    display: flex;
+    flex-direction: column;
+    margin: 20px auto;
+    padding: 10px;
+  }
