@@ -29,14 +29,38 @@
 }
 
 #usernameForm{
+    display: grid;
+    place-items: center;
+    transform: translate(-50%, -50%);
     position: absolute;
     top: 50%;
     left: 50%;
-    transform: translate(-50%,-50%);
-    width: 50%;
-    height: 50%;
-    border-radius: 5px;
-    padding: 10px;
+}
+#usernameForm input{
+    width: 80%;
+    padding: 5px;
+    flex: 1; 
+    padding: 5px;
+    border-radius: 10px;
+}
+#usernameForm input:hover{
+    border-radius: 10px;
+    border-width: 3px;
+}
+
+#usernameForm button{
+    height: 40px;
+    padding: 5px 10px;
+    background-color: #007bff;  
+    color: #fff;  
+    border: none;  
+    cursor: pointer;
+    margin: 3px;
+    border-radius: 15px;
+}
+#usernameForm button:hover{
+    color: aliceblue;
+    background-color: #1e90ff;
 }
 
 .input-with-button {
@@ -47,34 +71,50 @@
     bottom: 0;
     margin-bottom: 5px;
 }
-#name, #room-code, #submit-btn{
+#name, #room-code{
     margin-bottom: 5px;
 }
+.user_joined{
+    text-align: center; 
+    margin: auto; 
+    background-color: rgba(20, 216, 20, 0.425); 
+    padding: 5px; 
+    border-radius: 10px;
+}
 
+.user_left{
+    text-align: center; 
+    margin: auto; 
+    background-color: rgba(255, 0, 0, 0.425); 
+    padding: 5px; 
+    border-radius: 10px;
+}
 
-.messages {
+.message {
     max-width: 80%;
     padding: 8px;
     margin: 8px;
     border-radius: 8px;
-  }
+}
 
-  .sender {
+.sender {
     width: fit-content;
     align-items: end;
     align-self: flex-end;
     background-color: #4CAF50;
     place-content: flex-end;
-  }
+}
 
-  .receiver {
-    align-self: flex-start;align-items: end;
-    background-color: #ddd;width: fit-content;
-  }
+.receiver {
+    align-self: flex-start;
+    align-items: end;
+    background-color: #ddd;
+    width: fit-content;
+}
 
-  .messages-container {
+.messages-container {
     display: flex;
     flex-direction: column;
     margin: 20px auto;
     padding: 10px;
-  }
+}

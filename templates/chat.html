@@ -2,7 +2,7 @@
 {% block script %}
     <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.1.0/socket.io.js"></script>
 {% endblock %} 
-{% block title %}Flask Chat{% endblock %}
+{% block title %}{{room}} - Flask Chat{% endblock %}
 {% block content %}
     <div class ="messages-container" id="messages"></div>
     <div class="input-with-button" id="msgBox">
@@ -13,6 +13,7 @@
     <script>
         window.addEventListener('beforeunload', () => {
             socket.emit('leave', {
+                username: "{{username}}",
                 room_code: "{{room}}"
             });
         });
@@ -26,26 +27,35 @@
             });
         });
 
+        socket.on('message', function(data) {
+            onUserJoinedorLeave(data, data['status']=='joined'?'user_joined':'user_left');
+        });
+
         socket.on('recieved_msg', function(data) {
-            createMessage(data.username, data.msg);
+            createMessage(data.username, data.msg, data.username === "{{username}}"?'sender':'receiver');
         });
 
         var messages = document.getElementById('messages');
-        function createMessage(name, msg){
-            if (name == "{{username}}") {
-                var content =`<div class="messages sender">
+        function createMessage(name, msg, userType){
+            console.log(userType);
+            var content =`<div class="message ${userType}">
                 <span>
                    <strong>${name}</strong><br>${msg}
                 </span> 
             </div><br>`
-            } else{
-            var content =`<div class="messages receiver">
-                <span>
-                   <strong>${name}</strong><br>${msg}
-                </span>
-            </div><br>`}
-
+            
             messages.innerHTML += content;
+            window.scrollTo(0,document.body.scrollHeight);
+        }
+
+        function onUserJoinedorLeave(data, status) {
+            var content = `<div class="${status}">
+                <span>
+                   <strong>${data.username}</strong> ${data.msg}
+                </span>
+            </div><br>`
+            messages.innerHTML += content;
+            window.scrollTo(0,document.body.scrollHeight);
         }
 
         function sendMessage(){
@@ -54,7 +64,7 @@
                 return false;
             } else {
                 socket.emit('message', {username:"{{username}}", msg:msg, room_code:"{{room}}"});
-                createMessage("{{username}}", msg);
+                createMessage("{{username}}", msg, 'sender');
                 document.getElementById('message').value = '';
                 return false;
             }

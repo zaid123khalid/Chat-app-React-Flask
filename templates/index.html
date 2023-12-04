@@ -1,16 +1,63 @@
 {% extends "base.html" %}
-{% block title %}Index{% endblock %}
+{% block title %}Join Room - Flask Chat{% endblock %}
 {% block content %}
 <div id="usernameForm">
-    <form method="post" name="myForm" style="display: flex; flex-direction: column; align-items: center;">
         <input type="text" name="room-code" id="room-code" placeholder="Enter Room Code">
         <input type="text" name="name" id="name" placeholder="Enter Your Username">
-        <button type="submit" name="Join" class="join-btn" onclick="joinRoom()">Join a Room</button>
-        <button type="submit" name="create" class="create-btn" onclick="createRoom()">Create a Room</button>
-        {% if error %}
-            <p class="error" style="color: red;"><strong>Error:</strong> {{ error }}</p>
-        {% endif %}
-    </form>
+        <button type="submit" name="Join" class="join-btn" onclick="joinRoom()">Join Room</button>
+        <button type="submit" name="create" class="create-btn" onclick="createRoom()">Create Room</button>
 </div>
+<script>
+    function joinRoom() {
+        var roomCode = document.getElementById("room-code").value;
+        var name = document.getElementById("name").value;
+        fetch("http://192.168.100.7:5000/join_room", {
+            method: "POST",
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                room_code: roomCode,
+                username: name,
+            }),
+        }).then(response => response.json())
+            .then((data) => {
+                if (data['status'] === "success") {
+                    window.location.href = "/chat";
+                } else {
+                    console.log(data["status"]);
+                    alert(data["status"]);
+                }
+            })
+            .catch((error) => {
+                console.log(error);
+            });
+    }
+
+    function createRoom() {
+        var name = document.getElementById("name").value;
+        var room_code = document.getElementById("room-code").value;
+        fetch("http://192.168.100.7:5000/create_room", {
+            method: "POST",
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                room_code: room_code,
+                username: name,
+            })
+        })
+        .then(response => response.json())
+        .then((data) => {
+            if (data["status"] === 'success') {
+                window.location.href = "/chat";
+            } else {
+                alert(data["status"]);
+            }
+        }).catch((error) => {
+            console.log(error);
+        });
+    }
+</script>
 {% endblock %}
 </html>
