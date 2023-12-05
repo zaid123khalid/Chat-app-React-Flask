@@ -32,13 +32,12 @@
         });
 
         socket.on('recieved_msg', function(data) {
-            createMessage(data.username, data.msg, data.username === "{{username}}"?'sender':'receiver');
+            createMessage(data.username, data.msg);
         });
 
         var messages = document.getElementById('messages');
-        function createMessage(name, msg, userType){
-            console.log(userType);
-            var content =`<div class="message ${userType}">
+        function createMessage(name, msg){
+            var content =`<div class="message">
                 <span>
                    <strong>${name}</strong><br>${msg}
                 </span> 
@@ -64,7 +63,7 @@
                 return false;
             } else {
                 socket.emit('message', {username:"{{username}}", msg:msg, room_code:"{{room}}"});
-                createMessage("{{username}}", msg, 'sender');
+                createMessage("{{username}}", msg);
                 document.getElementById('message').value = '';
                 return false;
             }

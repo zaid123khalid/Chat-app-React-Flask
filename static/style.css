@@ -95,19 +95,6 @@
     padding: 8px;
     margin: 8px;
     border-radius: 8px;
-}
-
-.sender {
-    width: fit-content;
-    align-items: end;
-    align-self: flex-end;
-    background-color: #4CAF50;
-    place-content: flex-end;
-}
-
-.receiver {
-    align-self: flex-start;
-    align-items: end;
     background-color: #ddd;
     width: fit-content;
 }
