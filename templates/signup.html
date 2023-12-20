@@ -1,0 +1,67 @@
+{% extends 'base.html' %}
+{% block title %}Sign Up{% endblock %} 
+{% block content %}
+
+<div id="signup-box">
+    <form action="/signup" method="post" id="usernameForm">
+      <input type="text" name="username" placeholder="Enter Username" class="form-control" id="username"/>
+      <input type="email" name="email" placeholder="Enter Email" class="form-control" id="email"/>
+      <input type="password" name="password" placeholder="Enter Password" class="form-control" id="password"/>
+      <input type="password" name="confirm_password" placeholder="Confirm Password" class="form-control" id="confirm_password"/>
+      <button type="submit" class="btn btn-primary" id="submit-btn">Sign Up</button>
+    </form>
+</div>
+
+<div class="overlay">
+  <div class="modal">
+    <p id="error" style="text-align: center"></p>
+    <button onclick="closeDialog()">Close</button>
+  </div>
+</div>
+
+<script>
+  document.getElementById("submit-btn").addEventListener("click", function (e) {
+    e.preventDefault();
+    var username = document.getElementById("username").value;
+    var email = document.getElementById("email").value;
+    var password = document.getElementById("password").value;
+    var confirm_password = document.getElementById("confirm_password").value;
+
+    if (username === "" || email === "" || password === "" || confirm_password === "") {
+      errorTag = document.getElementById("error").innerHTML =
+        "Please fill all the fields";
+      document.querySelector(".overlay").style.display = "block";
+      return;
+    } else if (password !== confirm_password) {
+      errorTag = document.getElementById("error").innerHTML =
+        "Passwords do not match";
+      document.querySelector(".overlay").style.display = "block";
+      return;
+    } else if (password.length < 8) {
+      errorTag = document.getElementById("error").innerHTML =
+        "Password must be at least 8 characters long";
+      document.querySelector(".overlay").style.display = "block";
+      return;
+    } else if (username.length < 4) {
+      errorTag = document.getElementById("error").innerHTML =
+        "Username must be at least 4 characters long";
+      document.querySelector(".overlay").style.display = "block";
+      return;
+    } else {
+      document.getElementById("usernameForm").submit();
+    }
+  });
+</script>
+
+{% if error %}
+<script>
+  errorTag = document.getElementById("error").innerHTML = "{{ error }}";
+  document.querySelector(".overlay").style.display = "block";
+
+  function closeDialog() {
+    document.querySelector(".overlay").style.display = "none";
+  }
+</script>
+{% endif %}
+
+{% endblock %}

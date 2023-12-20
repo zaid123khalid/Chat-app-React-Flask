@@ -1,84 +1,281 @@
 {% extends "base.html" %}
 {% block script %}
     <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.1.0/socket.io.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+    <script src="{{url_for('static', filename='js/socketCon.js')}}"></script>
+    <script src="{{url_for('static', filename='js/httpReq.js')}}"></script>
 {% endblock %} 
-{% block title %}{{room}} - Flask Chat{% endblock %}
+{% block title %}Join Room - Flask Chat{% endblock %}
 {% block content %}
-    <div class ="messages-container" id="messages"></div>
-    <div class="input-with-button" id="msgBox">
+
+
+<!-- Sidebar -->
+<div class="sidebar">
+    <h1>Rooms
+        <button name="Join" class="join-btn" onclick="showModal('overlay-join-room')">
+            <img src="{{url_for('static', filename='imgs/join-48.png')}}" alt="Join" width="20" height="20">
+        </button>
+        <button name="Create" class="create-btn" onclick="showModal('overlay-create-room')">
+            <img src="{{url_for('static', filename='imgs/create-48.png')}}" alt="Create" width="20" height="20">
+        </button>
+    </h1>
+    <ul id="room-list">
+    </ul>
+</div>
+
+<!-- Chat Room -->
+<div class="chat-container" id="chat-container" style="display: none;">
+    <div class="chat-header">
+        <h1></h1>
+        <nav>
+            <ul>
+                <li>
+                    <a onclick="closeRoom()">Close</a>
+                    <a onclick="showModal('overlay-room-code')">Share Room Code</a>
+                    <a class="danger" onclick="leaveRoom()">Leave Room</a>
+                </li>
+            </ul>
+        </nav>
+    </div>
+    <div class="chat-content">
+
+    </div>
+    <div class="chat-input">
         <input type="text" id="message" placeholder="Type Your Message Here" onkeypress="checkKeyPress(event)">
         <button id="sendMsgBtn" type="button" onclick="sendMessage()">Send</button>
     </div>
+</div>
 
-    <script>
-        window.addEventListener('beforeunload', () => {
-            socket.emit('leave', {
-                username: "{{username}}",
-                room_code: "{{room}}"
-            });
-        });
-        var socket = io.connect('http://192.168.100.7:5000');
-        
-        socket.connect();
-        socket.on('connect', function() {
-            socket.emit('join', {
-                username: "{{username}}",
-                room_code: "{{room}}"
-            });
-        });
+<!-- Logout Button -->
+<button type="submit" name="Logout" class="fab" onclick="window.location.href='/logout'">
+    Logout
+</button>
 
-        socket.on('message', function(data) {
-            onUserJoinedorLeave(data, data['status']=='joined'?'user_joined':'user_left');
-        });
+<!-- Dialogs -->
+<div class="overlay-join-room">
+    <div class="modal">
+        <input type="text" name="room-code" id="room-code" placeholder="Enter Room Code">
+        <button type="submit" name="Join" class="" onclick="joinRoom()">Join Room</button>
+        <button onclick="closeDialog('overlay-join-room')">Close</button>
+    </div>
+</div>
+<div class="overlay-create-room">
+    <div class="modal">
+        <input type="text" name="room-name" id="room-name" placeholder="Enter Room Name">
+        <button type="submit" name="Create" class="" onclick="createRoom()">Create Room</button>
+        <button onclick="closeDialog('overlay-create-room')">Close</button>
+    </div>
+</div>
+<div class="overlay">
+    <div class="modal">
+        <p class="display-message"></p>
+        <button onclick="closeDialog('overlay')">Close</button>
+    </div>
+</div>
+<div class="overlay-room-code">
+    <div class="modal">
+        <p>
+            Share this room code with your friends to invite them to this room.
+        </p>
+        <input type="text" id="room-code-share" readonly>
+        <button onclick="copyAndCloseDialog()">Copy & Close</button>
+    </div>
+</div>
 
-        socket.on('recieved_msg', function(data) {
-            createMessage(data.username, data.msg);
-        });
+<script>
+    const socket_ = new SocketCon();
+    socket_.recievedMessage();
 
-        var messages = document.getElementById('messages');
-        function createMessage(name, msg){
-            var content =`<div class="message">
-                <span>
-                   <strong>${name}</strong><br>${msg}
-                </span> 
-            </div><br>`
-            
-            messages.innerHTML += content;
-            window.scrollTo(0,document.body.scrollHeight);
+    socket_.socket.on("latest_msg", function(data) {
+        updateRoomMessages(data["room_code"], data["last_message"], data["last_message_user"]);
+    });
+    var roomCode_ = '';
+    window.addEventListener('pageshow', function(event) {
+        if (event.persisted) {
+            location.reload();
         }
-
-        function onUserJoinedorLeave(data, status) {
-            var content = `<div class="${status}">
-                <span>
-                   <strong>${data.username}</strong> ${data.msg}
-                </span>
-            </div><br>`
-            messages.innerHTML += content;
-            window.scrollTo(0,document.body.scrollHeight);
-        }
-
-        function sendMessage(){
-            var msg = document.getElementById('message').value;
-            if (msg == '') {
-                return false;
+    });
+    function showModal(modalClassName) {
+        document.querySelector("."+modalClassName).style.display = 'block';
+    }
+    function joinRoom() {
+        var roomCode = document.getElementById("room-code").value;
+        HTTPRequest('join_room', 'POST', {room_code: roomCode}).then((response) => {
+            if (response['status'] === "success") {
+                if (document.getElementById(response["room"][0].room_code) === null) {
+                    addRoomToSidebar(response["room"][0]);
+                }
+                document.querySelector(".overlay-join-room").style.display = 'none';
+                document.getElementById("room-code-share").value = response["room"][0].room_code;
+                document.getElementById("chat-container").style.display = "block";
+                document.querySelector(".chat-header h1").innerHTML = response["room"][0].room_name;
+                document.querySelector(".chat-content").innerHTML = "";
+                for (var i = 0; i < response["messages"].length; i++) {
+                    console.log(response["messages"][i].time);
+                    var date= new Date(response["messages"][i].time);
+                    var time = date.toUTCString();
+                    var time = time.substring(17,22);
+                    var hours = (parseInt(time.substring(0,2))+11)%12 + 1;
+                    var minutes = time.substring(3,5);
+                    createMessage(response["messages"][i].username, response["messages"][i].msg, response["messages"][i].username == "{{username}}"?"sender":"receiver", hours + ":" + minutes + " " + (new Date().getHours() >= 12 ? 'PM' : 'AM'));
+                }
+                roomCode_ = response["room"][0].room_code;
+                setActiveRoom(roomCode_);
+                socket_.joinRoom("{{username}}", roomCode_);
             } else {
-                socket.emit('message', {username:"{{username}}", msg:msg, room_code:"{{room}}"});
-                createMessage("{{username}}", msg);
-                document.getElementById('message').value = '';
-                return false;
+                alert(response["status"]);
             }
+        }).catch((error) => {
+            console.log(error);
+        });
+        
+    }
+    
+    function createRoom() {
+        var roomName = document.getElementById("room-name").value;
+        HTTPRequest('create_room', 'POST', {room_name: roomName}).then((data) => {
+            if (data['status'] === "success") {
+                document.querySelector(".overlay-create-room").style.display = 'none';
+                document.querySelector(".overlay").style.display = 'block';
+                document.querySelector(".display-message").innerHTML = "Room Created, The room code is " + data["Room Code"] + " Please share it with your friends to join the room";
+            } else {
+                alert(data["status"]);
+            }
+        }).catch((error) => {
+            console.log(error);
+        });
+    }
+
+    function onRoomTapped(roomCode) {
+        HTTPRequest('join_room', 'POST', {room_code: roomCode}).then((data) => {
+            if (data['status'] === "success") {
+                document.getElementById("room-code-share").value = data["room"][0].room_code;
+                document.getElementById("chat-container").style.display = "block";
+                document.querySelector(".chat-header h1").innerHTML = data["room"][0].room_name;
+                document.querySelector(".chat-content").innerHTML = "";
+                for (var i = 0; i < data["messages"].length; i++) {
+                    var date= new Date(data["messages"][i].time);
+                    var time = date.toUTCString();
+                    var time = time.substring(17,22);
+                    var hours = (parseInt(time.substring(0,2))+11)%12 + 1;
+                    var minutes = time.substring(3,5);
+                    createMessage(data["messages"][i].username, data["messages"][i].msg, data["messages"][i].username == "{{username}}"?"sender":"receiver", hours + ":" + minutes + " " + (new Date().getHours() >= 12 ? 'PM' : 'AM'));
+                }
+                roomCode_ = data["room"][0].room_code;
+                socket_.joinRoom("{{username}}", roomCode_);
+                setActiveRoom(roomCode_);
+            } else {
+                alert(data["status"]);
+            }
+        }).catch((error) => {
+            console.log(error);
+        });
+    }
+    
+    var chatContent = document.querySelector(".chat-content");
+    function createMessage(name, msg, user_type, time){
+        var content =`<div class="message ${user_type}" >
+            <span>
+                <p class='message-sender'>${name}</p>
+                <p class='message-content'>${msg}</p>
+                <p class='message-time'>${time}</p>
+            </span> 
+        </div>`
+        
+        chatContent.innerHTML += content;
+        chatContent.scrollTop = chatContent.scrollHeight;
+    }
+
+    function closeDialog(modalClassName) {
+        document.getElementById("room-code").innerHTML = "";
+        document.getElementById("room-name").innerHTML = "";
+        document.querySelector("."+modalClassName).style.display = 'none';
+    }
+
+    function copyAndCloseDialog() {
+        var roomCode = document.getElementById("room-code-share");
+        roomCode.select();
+        roomCode.setSelectionRange(0, 99999);
+        document.execCommand("copy");
+        document.querySelector(".overlay-room-code").style.display = "none";
+    }
+    
+    function sendMessage(){
+        socket_.sendMessage("{{username}}",document.getElementById("message").value,  roomCode_);
+    }
+
+    function leaveRoom(){
+        socket_.leaveRoom("{{username}}", roomCode_);
+    }
+
+    function setActiveRoom(roomCode) {
+        const itemList = document.getElementById('room-list');
+        const items = itemList.getElementsByClassName('room-list-item');
+
+        for (const item of items) {
+            item.classList.remove('active');
         }
 
-        function checkKeyPress(event) {
-        if (event.keyCode === 13) { 
+        const activeItem = itemList.querySelector(`[onclick="onRoomTapped('${roomCode}')"]`);
+        activeItem.classList.add('active');
+    }
+
+
+    function checkKeyPress(event) {
+        if (event.keyCode == 13) {
             sendMessage();
         }
     }
-    </script>
-{% for message in messages %}
+
+    function addRoomToSidebar(room){
+        var roomListItem = `
+        <li class='room-list-item' id='${room['room_code']}' onclick="onRoomTapped('${room['room_code']}')">
+            <span class='room-name'>${room['room_name']}</span>
+            <span>
+                ${room['last_message'] !== null ?
+                    `<p class='last-msg'>${room['last_message_user']}: ${room['last_message']}</p>` :
+                    `<p class='last-msg'>No Messages Yet</p>`
+                }
+            </span>
+                
+        </li>`
+
+    document.getElementById("room-list").innerHTML += roomListItem;
+    }
+    
+    function closeRoom(){
+        var roomListItem = document.getElementById("room-list").getElementsByClassName("active")[0];
+        roomListItem.classList.remove("active");
+        document.getElementById("chat-container").style.display = "none";
+    }
+
+    function updateRoomMessages(roomCode, msg, user){
+        var roomListItem = document.getElementById(roomCode);
+        console.log(roomListItem);
+        roomListItem.getElementsByClassName("last-msg")[0].innerHTML = user + ": " + msg;
+    }
+</script>
+
+{% for room in rooms %}
     <script>
-        createMessage("{{message['username']}}", "{{message['msg']}}");
+        var roomList = document.getElementById("room-list");
+        var roomListItem = `
+            <li class='room-list-item' id='{{room['room_code']}}' onclick="onRoomTapped('{{room['room_code']}}')">
+                <span class='room-name'>{{room['room_name']}}</span>
+                {% if room['last_message'] %}
+                <span>
+                    <p class='last-msg'>{{room['last_messsage_user'] }}: {{ room['last_message'] }}</p>
+                </span>
+                {% else %}
+                <span>
+                    <p class='last-msg'>No Messages yet</p>
+                </span>
+                {%endif%}
+            </li>
+        `
+        roomList.innerHTML += roomListItem;
     </script>
 {% endfor %}
+
 {% endblock %}
 </html>

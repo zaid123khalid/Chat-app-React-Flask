@@ -1,37 +1,17 @@
 {% extends "base.html" %}
 {% block title %}Join Room - Flask Chat{% endblock %}
 {% block content %}
-<div id="usernameForm">
-        <input type="text" name="room-code" id="room-code" placeholder="Enter Room Code">
-        <input type="text" name="name" id="name" placeholder="Enter Your Username">
-        <button type="submit" name="Join" class="join-btn" onclick="joinRoom()">Join Room</button>
-</div>
-<script>
-    function joinRoom() {
-        var roomCode = document.getElementById("room-code").value;
-        var name = document.getElementById("name").value;
-        fetch("http://192.168.100.7:5000/join_room", {
-            method: "POST",
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-                room_code: roomCode,
-                username: name,
-            }),
-        }).then(response => response.json())
-            .then((data) => {
-                if (data['status'] === "success") {
-                    window.location.href = "/chat";
-                } else {
-                    console.log(data["status"]);
-                    alert(data["status"]);
-                }
-            })
-            .catch((error) => {
-                console.log(error);
-            });
-    }
-</script>
+
+<header id="top-bar">
+    
+    <nav>
+      <ul>
+        <li><a href="/login">Login</a></li>
+        <li><a href="/signup">Signup</a></li>
+        <!-- <li><a href="#">Services</a></li>
+        <li><a href="#">Contact</a></li> -->
+      </ul>
+    </nav>
+  </header>
 {% endblock %}
 </html>
