@@ -1,8 +1,4 @@
 class HttpConn {
-  constructor() {
-    this._baseUrl = "https://api.github.com";
-  }
-
   async get(url) {
     const response = await fetch(url);
     const data = await response.json();

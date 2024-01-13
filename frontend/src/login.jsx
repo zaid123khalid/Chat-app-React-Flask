@@ -7,7 +7,10 @@ export default function Login() {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [rememberMe, setRememberMe] = useState(false);
-  const [error, setError] = useState(false);
+  const [error, setError] = useState({
+    username: false,
+    password: false,
+  });
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -19,43 +22,70 @@ export default function Login() {
           if (data.status === "success") {
             navigate("/chat");
           } else {
-            setError(true);
+            if (
+              data.status === "error" &&
+              data.message === "Invalid username"
+            ) {
+              setError({ ...error, username: true });
+            } else if (
+              data.status === "error" &&
+              data.message === "Invalid password"
+            ) {
+              setError({ ...error, password: true });
+            } else {
+              setError({ ...error, username: true, password: true });
+            }
           }
         });
-      setError(false);
-    } catch (error) {
-      setError(true);
-    }
+    } catch (error) {}
   };
   return (
     (document.title = "Chat - Login"),
     (
       <div className="wrapper">
         <div className="form">
-          <h1>Chat App</h1>
+          <h1>Login</h1>
           <form onSubmit={handleSubmit} className="login-form">
-            <input
-              type="text"
-              value={username}
-              onChange={(e) => {
-                setUsername(e.target.value);
-                setError(false);
-              }}
-              className="input"
-              placeholder="Username"
-              required
-            />
-            <input
-              type="password"
-              value={password}
-              onChange={(e) => {
-                setPassword(e.target.value);
-                setError(false);
-              }}
-              className="input"
-              placeholder="Password"
-              required
-            />
+            <div className="login-username-input">
+              <input
+                type="text"
+                value={username}
+                onChange={(e) => {
+                  setUsername(e.target.value);
+                  setError(false);
+                }}
+                className={`login-input` + (error.username ? " error" : "")}
+                placeholder="Username"
+                required
+              />
+              <span>
+                {error.username ? (
+                  <span className="error">Invalid Username</span>
+                ) : (
+                  ""
+                )}
+              </span>
+            </div>
+            <div className="login-password-input">
+              <input
+                type="password"
+                value={password}
+                onChange={(e) => {
+                  setPassword(e.target.value);
+                  setError(false);
+                }}
+                className={`login-input` + (error.password ? " error" : "")}
+                placeholder="Password"
+                required
+              />
+              <span>
+                {error.password ? (
+                  <span className="error">Invalid Password</span>
+                ) : (
+                  ""
+                )}
+              </span>
+            </div>
             <div className="remember-me">
               <input
                 type="checkbox"
@@ -74,7 +104,6 @@ export default function Login() {
               Don't have an account? <Link to="/signup">Sign up</Link>
             </p>
           </form>
-          <h2 className="error">{error ? "Incorrect Credentials" : ""}</h2>
         </div>
       </div>
     )

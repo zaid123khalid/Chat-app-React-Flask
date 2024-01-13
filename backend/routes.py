@@ -1,10 +1,10 @@
+import json
 from flask import jsonify, request, session, Blueprint
 from flask_login import login_user, logout_user, login_required, current_user
-from sqlalchemy import text
+from sqlalchemy import text, or_, and_
 
-from database import db, Room, Message, User
+from database import Friends, FriendsMessage, db, Room, Message, User
 from utils import generate_unique_code
-
 
 api = Blueprint("api", __name__)
 
@@ -26,7 +26,12 @@ def chat():
             room.last_message = last_message.msg
             room.last_messsage_user = last_message.username
             db.session.commit()
-
+    friends = Friends.query.filter(
+        or_(
+            Friends.user1 == current_user.username,
+            Friends.user2 == current_user.username,
+        )
+    ).all()
     return jsonify(
         {
             "status": "success",
@@ -39,6 +44,15 @@ def chat():
                     "last_message_user": room.last_messsage_user,
                 }
                 for room in rooms
+            ],
+            "friends": [
+                {
+                    "id": friend.id,
+                    "user1": friend.user1,
+                    "user2": friend.user2,
+                    "status": friend.status,
+                }
+                for friend in friends
             ],
         }
     )
@@ -73,11 +87,14 @@ def login():
         password = request.get_json()["password"]
         remember = request.get_json()["rememberMe"]
         user = User.query.filter_by(username=username).first()
-        if user is not None and user.verify_password(password):
-            login_user(user, remember=remember)
-            return jsonify({"status": "success"}), 200
+        if user is not None:
+            if user.verify_password(password):
+                login_user(user, remember=remember)
+                return jsonify({"status": "success"}), 200
+            else:
+                error = "Invalid password"
         else:
-            error = "Incorrect username or password"
+            error = "Invalid username"
 
     return jsonify({"status": "error", "message": error}), 500
 
@@ -92,8 +109,6 @@ def logout():
 @login_required
 @api.route("/join_room", methods=["GET", "POST"])
 def join_room():
-    room_data = []
-    messages_data = []
     room_code = request.get_json()["room_code"]
     username = current_user.username
     room_query = Room.query.filter_by(room_code=room_code).first()
@@ -102,7 +117,6 @@ def join_room():
             session["room"] = room_code
             user = User.query.filter_by(username=username).first()
             room = Room.query.filter_by(room_code=room_code).first()
-
             user_in_room = db.session.execute(
                 text(
                     "SELECT * FROM rooms_users WHERE user_id = :user_id AND room_id = :room_id"
@@ -115,35 +129,11 @@ def join_room():
                 user.rooms.append(room)
                 db.session.commit()
 
-            messages = Message.query.filter_by(room_id=room.id).all()
-
-            room_data.clear()
-            messages_data.clear()
-            for message in messages:
-                messages_data.append(
-                    {
-                        "id": message.id,
-                        "username": message.username,
-                        "msg": message.msg,
-                        "time": message.time,
-                    }
-                )
-            room_data.append(
-                {
-                    "room_code": room.room_code,
-                    "room_name": room.room_name,
-                    "last_message": room.last_message,
-                    "last_message_user": room.last_messsage_user,
-                    "admin": room.admin,
-                }
-            )
             return (
                 jsonify(
                     {
                         "status": "success",
-                        "room": room_data,
-                        "messages": messages_data,
-                        "username": username,
+                        "room": room.__repr__(),
                     }
                 ),
                 200,
@@ -167,39 +157,30 @@ def create_room():
 
 
 @login_required
-@api.route("/delete_message/<int:id_>", methods=["GET", "POST", "DELETE"])
-def delete_message(id_):
-    message = Message.query.filter_by(id=id_).first()
+@api.route("/join_friend", methods=["GET", "POST"])
+def join_friend():
+    username = current_user.username
+    friend_username = request.get_json()["friend_username"]
+    friend = Friends.query.filter(
+        or_(
+            and_(
+                Friends.user1 == username,
+                Friends.user2 == friend_username,
+            ),
+            and_(
+                Friends.user1 == friend_username,
+                Friends.user2 == username,
+            ),
+        )
+    ).first()
+    if friend is not None:
+        session["room"] = friend.id
 
-    if request.method == "DELETE":
-        try:
-            db.session.delete(message)
-            db.session.commit()
-            room = Room.query.filter_by(id=message.room_id).first()
-            last_message = (
-                Message.query.filter_by(room_id=room.id)
-                .order_by(Message.time.desc())
-                .first()
-            )
-
-            room.last_message = last_message.msg if last_message is not None else ""
-            room.last_messsage_user = (
-                last_message.username if last_message is not None else ""
-            )
-            db.session.commit()
-
-            return (
-                jsonify(
-                    {
-                        "status": "success",
-                        "room_code": room.room_code,
-                        "last_message": room.last_message,
-                        "last_message_user": room.last_messsage_user,
-                    }
-                ),
-                200,
-            )
-        except:
-            db.session.rollback()
-
-            return jsonify({"status": "error"}), 500
+        return (
+            jsonify(
+                {"status": "success", "friend": friend.__repr__(), "username": username}
+            ),
+            200,
+        )
+    else:
+        return jsonify({"status": "Friend doesn't exist"}), 500

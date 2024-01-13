@@ -1,22 +1,26 @@
 import ChatMessages from "./chat_messages";
-import ChatInput from "./chat-input";
+import ChatInput from "./chat_input";
 
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
+import socketInstance from "../services/socket_conn";
 
 export default function ChatRoom({
   leaveRoom_,
-  messagesEndRef_,
   activeRoom_,
   messages_,
   username_,
-  newMsg_,
-  setNewMsg_,
-  sendMessage_,
   closeChat_,
-  deleteMessage_,
 }) {
   const [context, setContext] = useState(false);
   const [xyPos, setxyPos] = useState({ x: 0, y: 0 });
+
+  const socket = socketInstance.getSocket();
+
+  function deleteRoom() {
+    socket.emit("delete_room", {
+      room_code: activeRoom_.room_code,
+    });
+  }
   const showContextMenu = (e) => {
     setContext(false);
 
@@ -30,8 +34,12 @@ export default function ChatRoom({
     }
   };
   const shareCode_ = () => {
-    const code = activeRoom_[0].room_code;
-    navigator.clipboard.writeText(code);
+    const code = activeRoom_.room_code;
+    document.execCommand("copy");
+    document.addEventListener("copy", (e) => {
+      e.clipboardData.setData("text/plain", code);
+      e.preventDefault();
+    });
     alert("Room code copied to clipboard");
   };
 
@@ -39,13 +47,10 @@ export default function ChatRoom({
     document.addEventListener("click", () => {
       setContext(false);
     }),
-    document.addEventListener("contextmenu", (e) => {
-      showContextMenu(e);
-    }),
     (
       <div className="chat-content">
         <header onContextMenu={(e) => showContextMenu(e)}>
-          <h1>{activeRoom_[0].room_name}</h1>
+          <h1>{activeRoom_.room_name}</h1>
           {context && (
             <div
               className="room-settings context-menu"
@@ -54,6 +59,9 @@ export default function ChatRoom({
                 setContext(false);
               }}
             >
+              {activeRoom_.admin === username_ && (
+                <a onClick={deleteRoom}>Delete Room</a>
+              )}
               <a onClick={shareCode_}>Share Room Code</a>
               <a onClick={closeChat_}>Close Chat</a>
               <a onClick={leaveRoom_}>Leave Room</a>
@@ -64,14 +72,10 @@ export default function ChatRoom({
         <ChatMessages
           messages={messages_}
           username_={username_}
-          messagesEndRef_={messagesEndRef_}
-          deleteMessage_={deleteMessage_}
+          isRoomChat={true}
+          activeRoom={activeRoom_}
         />
-        <ChatInput
-          newMsg_={newMsg_}
-          setNewMsg_={setNewMsg_}
-          sendMessage_={sendMessage_}
-        />
+        <ChatInput activeRoom_={activeRoom_} username={username_} />
       </div>
     )
   );

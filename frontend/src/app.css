@@ -366,3 +366,23 @@ ul.sidebar-buttons {
 ::-webkit-scrollbar-thumb:hover {
   background: #919191;
 }
+
+.error {
+  color: #ff0000;
+}
+
+.login-input.error {
+  border: 1px solid #ff0000;
+  color: black;
+}
+
+.login-username-input,
+.login-password-input {
+  width: 100%;
+  padding: 0 15px;
+  box-sizing: border-box;
+  margin-bottom: 15px;
+  display: grid;
+  text-align: start;
+  outline: none;
+}

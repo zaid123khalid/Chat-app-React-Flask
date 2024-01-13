@@ -9,6 +9,11 @@ export default function ChatSidebar({
   selectedRoom_,
   onRoomCreated_,
   onRoomJoined_,
+  friends_,
+  selectedFriend_,
+  onFriendSelected_,
+  activeFriend,
+  username,
 }) {
   const navigate = useNavigate();
   const logout = () => {
@@ -31,14 +36,7 @@ export default function ChatSidebar({
               onRoomCreated_(enteredName);
             }}
           >
-            <img
-              src={create}
-              alt="create room"
-              width={25}
-              height={25}
-              className="create-btn"
-              srcSet=""
-            />
+            <img src={create} alt="create room" width={25} height={25} />
           </button>
           <button
             onClick={() => {
@@ -46,7 +44,7 @@ export default function ChatSidebar({
               onRoomJoined_(enteredCode);
             }}
           >
-            <img src={join} alt="" width={25} height={25} srcSet="" />
+            <img src={join} alt="Join room" width={25} height={25} />
           </button>
         </ul>
       </header>
@@ -58,19 +56,43 @@ export default function ChatSidebar({
             className={`sidebar-item ${
               selectedRoom_ === room.room_code ? "active" : ""
             }`}
-            onClick={() => onRoomJoined_(room.room_code)}
+            onClick={() => {
+              onFriendSelected_("");
+              onRoomJoined_(room.room_code);
+            }}
           >
             {room.room_name}
             <br />
             {room.last_message ? (
               <span className="last-message">
-                {room.last_message_user}: {room.last_message}
+                {room.last_message_user === username
+                  ? "You"
+                  : room.last_message_user}
+                : {room.last_message}
               </span>
             ) : (
               <span className="last-message">No messages</span>
             )}
           </li>
         ))}
+        {friends_.map(
+          (friend) =>
+            friend.status === "accepted" && (
+              <li
+                onClick={() => {
+                  onRoomJoined_("");
+                  onFriendSelected_(friend);
+                }}
+                key={friend.id}
+                id={friend.id}
+                className={`sidebar-item ${
+                  friend.id === selectedFriend_.id ? "active" : ""
+                }`}
+              >
+                {friend.user1 === username ? friend.user2 : friend.user1}
+              </li>
+            )
+        )}
       </ul>
       <button onClick={logout} className="logout-btn">
         Logout
