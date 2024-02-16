@@ -1,20 +1,20 @@
 React & Flask Chat App<br/>
 
-A python based chat app using python framework **flask**<br/>
-
-The backend is also connected to app built using flutter. For this you can refer to Flutter-flask-chat-app on my profile.<br/>
-
 Requirements (backend):<br/>
 Flask<br/>
-Flask-socketio <!-- For bidirectional communication of messages --><br/>
-Flask-sqlalchemy <!-- For storing messages, rooms and users --><br/>
-flask-login <!-- For managing login sessions of user --><br/>
-sqlalchemy <!-- For custom querying data use with flask-sqlalchemy --><br/>
-passlib <!-- For hashing the users password --><br/>
+Flask-socketio <br/>
+Flask-sqlalchemy <br/>
+flask-login <br/>
+sqlalchemy <br/>
+passlib <br/>
+pymysql <br/>
 
 Requirements (frontend):<br/>
 react-router-dom<br/>
 socket.io-client<br/>
+@emotion/react<br/>
+@emotion/styled<br/>
+@mui/material<br/>
 
 For frontend:<br/>
 First run `npm i` or `npm install`<br/>
@@ -22,3 +22,8 @@ then run npm i `package-name`<br/>
 
 For backend:<br/>
 Install libraries using pip or your favourite package manager
+
+<br/>
+<h1>Updates:</h1>
+1. You can add friends and keep your chats personal. You can send friend requests, accept them and chat with your friends.<br/>
+2. Migrated from SQLite to MySQL.<br/>

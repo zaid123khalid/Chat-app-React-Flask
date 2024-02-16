@@ -5,11 +5,19 @@ class Socket {
     if (!Socket.instance) {
       this.socket = io("http://localhost:5000", {
         transports: ["websocket"],
-      }).connect();
+        autoConnect: false,
+        query: {
+          token: localStorage.getItem("token"),
+        },
+      });
       Socket.instance = this;
     }
 
     return Socket.instance;
+  }
+
+  connect() {
+    this.socket.connect();
   }
 
   getSocket() {

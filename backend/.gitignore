@@ -2,3 +2,4 @@ venv/
 instance/
 __pycache__/
 custom_sql_exec.py
+migrations/

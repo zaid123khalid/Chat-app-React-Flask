@@ -1,44 +1,51 @@
-import { useState } from "react";
-import { useNavigate, Link } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { useNavigate, Link, useSearchParams } from "react-router-dom";
 import HttpConn from "./services/http_conn";
 
 export default function Login() {
   const navigate = useNavigate();
-  const [username, setUsername] = useState("");
-  const [password, setPassword] = useState("");
-  const [rememberMe, setRememberMe] = useState(false);
-  const [error, setError] = useState({
-    username: false,
-    password: false,
+  const [searchParams] = useSearchParams();
+  const [formData, setFormData] = useState({
+    username: "",
+    password: "",
+    rememberMe: false,
   });
+  const [tokenError, setTokenError] = useState(false);
+  const [error, setError] = useState(false);
+  const [errormsg, setErrormsg] = useState("");
 
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    try {
-      new HttpConn()
-        .post("/api/login", { username, password, rememberMe })
-        .then((data) => {
-          if (data.status === "success") {
-            navigate("/chat");
-          } else {
-            if (
-              data.status === "error" &&
-              data.message === "Invalid username"
-            ) {
-              setError({ ...error, username: true });
-            } else if (
-              data.status === "error" &&
-              data.message === "Invalid password"
-            ) {
-              setError({ ...error, password: true });
-            } else {
-              setError({ ...error, username: true, password: true });
-            }
-          }
-        });
-    } catch (error) {}
+    new HttpConn().post("/api/login", { ...formData }).then((data) => {
+      if (data.status === "success") {
+        localStorage.setItem("username", data.username);
+        localStorage.setItem("token", data.token);
+        navigate("/chat", { replace: true });
+      } else {
+        if (data.status === "error" && data.message === "Invalid username") {
+          setError(true);
+          setErrormsg(data.message);
+        } else if (
+          data.status === "error" &&
+          data.message === "Invalid password"
+        ) {
+          setError(true);
+          setErrormsg(data.message);
+        } else {
+          setError(true);
+          setErrormsg(data.message);
+        }
+      }
+    });
   };
+
+  useEffect(() => {
+    if (searchParams.get("redirectFrom") === "chat") {
+      setTokenError(true);
+    }
+  }, [searchParams]);
+
   return (
     (document.title = "Chat - Login"),
     (
@@ -46,63 +53,51 @@ export default function Login() {
         <div className="form">
           <h1>Login</h1>
           <form onSubmit={handleSubmit} className="login-form">
-            <div className="login-username-input">
-              <input
-                type="text"
-                value={username}
-                onChange={(e) => {
-                  setUsername(e.target.value);
-                  setError(false);
-                }}
-                className={`login-input` + (error.username ? " error" : "")}
-                placeholder="Username"
-                required
-              />
-              <span>
-                {error.username ? (
-                  <span className="error">Invalid Username</span>
-                ) : (
-                  ""
-                )}
-              </span>
-            </div>
-            <div className="login-password-input">
-              <input
-                type="password"
-                value={password}
-                onChange={(e) => {
-                  setPassword(e.target.value);
-                  setError(false);
-                }}
-                className={`login-input` + (error.password ? " error" : "")}
-                placeholder="Password"
-                required
-              />
-              <span>
-                {error.password ? (
-                  <span className="error">Invalid Password</span>
-                ) : (
-                  ""
-                )}
-              </span>
-            </div>
+            <input
+              type="text"
+              value={formData.username}
+              onChange={(e) => {
+                setFormData({ ...formData, username: e.target.value });
+                setError(false);
+              }}
+              className={`login-input` + (error.username ? " error" : "")}
+              placeholder="Username"
+              required
+            />
+            <input
+              type="password"
+              value={formData.password}
+              onChange={(e) => {
+                setFormData({ ...formData, password: e.target.value });
+                setError(false);
+              }}
+              className={`login-input` + (error.password ? " error" : "")}
+              placeholder="Password"
+              required
+            />
             <div className="remember-me">
               <input
                 type="checkbox"
-                checked={rememberMe}
-                onChange={(e) => setRememberMe(e.target.checked)}
+                checked={formData.rememberMe}
+                onChange={(e) => {
+                  setFormData({ ...formData, rememberMe: e.target.checked });
+                }}
               />
               <span>Remember me</span>
             </div>
-            <div align="center">
-              <button type="submit" className="button">
-                <span>Login</span>
-              </button>
-            </div>
-
+            <span className="error">{error ? errormsg : ""}</span>
+            <button type="submit" className="button">
+              <span>Login</span>
+            </button>
             <p>
               Don't have an account? <Link to="/signup">Sign up</Link>
             </p>
+
+            {tokenError && (
+              <p className="error">
+                Your token has expired. Please login again
+              </p>
+            )}
           </form>
         </div>
       </div>

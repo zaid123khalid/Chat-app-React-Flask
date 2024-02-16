@@ -3,38 +3,53 @@ import { useNavigate, Link } from "react-router-dom";
 import HttpConn from "./services/http_conn";
 
 export default function Signup() {
-  const [username, setUsername] = useState("");
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [confirmPassword, setConfirm] = useState("");
+  const [formData, setFormData] = useState({
+    username: "",
+    password: "",
+    confirmPassword: "",
+    email: "",
+  });
+
   const [error, setError] = useState(false);
+  const [errormsg, setErrormsg] = useState("");
   const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-
-    try {
-      if (password !== confirmPassword) {
-        setError(true);
-        return;
-      }
-      new HttpConn()
-        .post(
-          "/api/signup",
-
-          { username, password, email }
-        )
-        .then((data) => {
-          if (data.status === "success") {
-            navigate("/login");
-          } else {
-            setError(true);
-          }
-        });
-      setError(false);
-    } catch (error) {
+    if (formData.password !== formData.confirmPassword) {
+      setErrormsg("Passwords do not match");
       setError(true);
+      return;
     }
+
+    if (formData.password.length < 8) {
+      setErrormsg("Password must be atleast 8 characters long");
+      setError(true);
+      return;
+    }
+
+    new HttpConn().post("/api/signup", { ...formData }).then((data) => {
+      if (data.status === "success") {
+        navigate("/login");
+      } else {
+        if (
+          data.status === "error" &&
+          data.message === "Username already exists"
+        ) {
+          setErrormsg("Username already exists");
+        } else if (
+          data.status === "error" &&
+          data.message === "Email already exists"
+        ) {
+          setErrormsg("Email already exists");
+        }
+
+        setError(true);
+        setTimeout(() => {
+          setError(false);
+        }, 1000);
+      }
+    });
   };
 
   return (
@@ -46,46 +61,52 @@ export default function Signup() {
           <form onSubmit={handleSubmit} className="signup-form">
             <input
               type="text"
-              value={username}
-              onChange={(e) => setUsername(e.target.value)}
+              value={formData.username}
+              onChange={(e) =>
+                setFormData({ ...formData, username: e.target.value })
+              }
               className="input"
               placeholder="Username"
               required
             />
             <input
               type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
+              value={formData.email}
+              onChange={(e) =>
+                setFormData({ ...formData, email: e.target.value })
+              }
               className="input"
               placeholder="Email"
               required
             />
             <input
               type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
+              value={formData.password}
+              onChange={(e) =>
+                setFormData({ ...formData, password: e.target.value })
+              }
               className="input"
               placeholder="Password"
               required
             />
             <input
               type="password"
-              value={confirmPassword}
-              onChange={(e) => setConfirm(e.target.value)}
+              value={formData.confirmPassword}
+              onChange={(e) =>
+                setFormData({ ...formData, confirmPassword: e.target.value })
+              }
               className="input"
               placeholder="Password"
               required
             />
 
-            <div align="center">
-              <button type="submit" className="button">
-                <span>Signup</span>
-              </button>
-            </div>
+            <button type="submit" className="button">
+              <span>Signup</span>
+            </button>
             <p>
               Already have an account? <Link to="/login">Login</Link>
             </p>
-            <h2 className="error">{error ? "Incorrect Credentials" : ""}</h2>
+            <h2 className="error">{error ? errormsg : ""}</h2>
           </form>
         </div>
       </div>
