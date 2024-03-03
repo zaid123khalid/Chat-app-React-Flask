@@ -1,9 +1,9 @@
 React & Flask Chat App<br/>
 
 <h2>Features:</h2>
-1. You can Join Rooms and chat with others.
-2. You can send or accept Friend requests and make your chats personal.
-3. You can send emoji's while chatting.
+1. You can Join Rooms and chat with others.  
+2. You can send or accept Friend requests and make your chats personal.  
+3. You can send emoji's while chatting.  
 You can also delete messages, leave rooms, admin can delete room.
 <hr/>
 
