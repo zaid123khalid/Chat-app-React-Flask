@@ -1,10 +1,12 @@
 from flask_jwt_extended import decode_token
-from flask_socketio import SocketIO, emit, join_room, leave_room
+from flask_socketio import SocketIO, emit, join_room, leave_room, rooms
 from sqlalchemy import or_, text
 from database import FriendRequest, Friends, FriendsMessage, User, db, Room, Message
 from flask import request
 import datetime
 import time
+import traceback
+
 
 socket = SocketIO(cors_allowed_origins="*")
 
@@ -30,6 +32,15 @@ def connect():
             for friend in friends:
                 join_room(friend.id, sid=request.sid)
     current_users[user.username] = request.sid
+
+
+@socket.on("join")
+def join(data):
+    join_room(data["room_code"], sid=request.sid)
+    user = User.query.filter_by(username=data["username"]).first()
+    room = Room.query.filter_by(room_code=data["room_code"]).first()
+    user.rooms.append(room)
+    db.session.commit()
 
 
 @socket.on("leave")
@@ -89,7 +100,6 @@ def friend_message(data):
     friends.last_message = data["msg"]
     friends.last_message_user = data["user1"]
     db.session.commit()
-
     emit(
         "friend_message_received",
         {
@@ -99,7 +109,7 @@ def friend_message(data):
             "receiver": User.query.filter_by(id=message.receiver).first().username,
             "status": friends.status,
             "msg": data["msg"],
-            "time": f"{message.time.strftime('%a-%b-%y %I:%M')} {message.time.strftime('%p')}",
+            "time": f"{message.time.strftime('%b-%y %I:%M')} {message.time.strftime('%p')}",
             "last_message": friends.last_message,
             "last_message_user": friends.last_message_user,
         },
@@ -215,11 +225,12 @@ def friend_request_sent(data):
         sender=User.query.filter_by(username=data["user1"]).first().id,
         receiver=User.query.filter_by(username=data["user2"]).first().id,
     ).first()
-    emit(
-        "friend_request_received",
-        friend_request.to_dict(),
-        to=current_users[data["user2"]],
-    )
+    if data["user2"] in current_users:
+        emit(
+            "friend_request_received",
+            friend_request.to_dict(),
+            to=current_users[data["user2"]],
+        )
 
 
 @socket.on("friend_request_accepted")
@@ -227,7 +238,17 @@ def friend_request_accepted(data):
     friend = Friends.query.filter_by(id=data["friend_id"]).first()
     user1_username = User.query.filter_by(id=friend.user1).first().username
     user2_username = User.query.filter_by(id=friend.user2).first().username
-    join_room(friend.id, sid=current_users[user1_username])
-    join_room(friend.id, sid=current_users[user2_username])
-    emit("friend_request_accepted", friend.to_dict(), to=current_users[user1_username])
-    emit("friend_request_accepted", friend.to_dict(), to=current_users[user2_username])
+    if user1_username in current_users:
+        join_room(friend.id, sid=current_users[user1_username])
+        emit(
+            "friend_request_accepted",
+            friend.to_dict(),
+            to=current_users[user1_username],
+        )
+    if user2_username in current_users:
+        join_room(friend.id, sid=current_users[user2_username])
+        emit(
+            "friend_request_accepted",
+            friend.to_dict(),
+            to=current_users[user2_username],
+        )

@@ -47,7 +47,7 @@ class Room(db.Model, BaseModel):
         "Message", cascade="all, delete", backref="room", lazy=True
     )
     admin = db.Column(db.INTEGER, db.ForeignKey("user.id"), nullable=False)
-    last_message = db.Column(db.String(200), nullable=True)
+    last_message = db.Column(db.TEXT, nullable=True)
     last_message_user = db.Column(db.String(20), nullable=True)
 
     def to_dict(self):
@@ -69,6 +69,9 @@ class Message(db.Model, BaseModel):
 
     def to_dict(self):
         dict_self = super().to_dict()
+        dict_self["time"] = (
+            f"{self.time.strftime('%b-%y %I:%M')} {self.time.strftime('%p')}"
+        )
         dict_self["sender"] = User.query.filter_by(id=self.sender).first().username
         return dict_self
 
@@ -103,7 +106,7 @@ class Friends(db.Model, BaseModel):
     user1 = db.Column(db.INTEGER, db.ForeignKey("user.id"), nullable=False)
     user2 = db.Column(db.INTEGER, db.ForeignKey("user.id"), nullable=False)
     status = db.Column(db.String(20), nullable=False)
-    last_message = db.Column(db.String(200), nullable=True)
+    last_message = db.Column(db.TEXT, nullable=True)
     last_message_user = db.Column(db.String(20), nullable=True)
     messages = db.relationship(
         "FriendsMessage", cascade="all,delete", backref="friends", lazy=True
@@ -122,7 +125,7 @@ class FriendsMessage(db.Model, BaseModel):
     id = db.Column(db.INTEGER, primary_key=True)
     sender = db.Column(db.INTEGER, db.ForeignKey("user.id"), nullable=False)
     receiver = db.Column(db.INTEGER, db.ForeignKey("user.id"), nullable=False)
-    msg = db.Column(db.String(200), nullable=False)
+    msg = db.Column(db.TEXT, nullable=False)
     time = db.Column(
         db.TIMESTAMP, server_default=db.text("CURRENT_TIMESTAMP"), nullable=False
     )
@@ -130,6 +133,9 @@ class FriendsMessage(db.Model, BaseModel):
 
     def to_dict(self):
         dict_repr = super().to_dict()
+        dict_repr["time"] = (
+            f"{self.time.strftime('%b-%y %I:%M')} {self.time.strftime('%p')}"
+        )
         dict_repr["sender"] = User.query.filter_by(id=self.sender).first().username
         dict_repr["receiver"] = User.query.filter_by(id=self.receiver).first().username
         return dict_repr

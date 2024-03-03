@@ -217,6 +217,22 @@ form a:hover {
   background: none;
   padding: 7.5px 15px 0 10px;
 }
+.emoji-picker {
+  position: absolute;
+  bottom: 25px;
+  right: 10px;
+  display: none;
+}
+.chat-input .emoji-btn {
+  cursor: pointer;
+  background-color: #494949;
+  width: 40px;
+  height: 40px;
+  border-radius: 5px;
+  padding: 5px;
+  box-sizing: border-box;
+  margin-right: 5px;
+}
 .chat-input input {
   width: 100%;
   height: 40px;
@@ -228,7 +244,6 @@ form a:hover {
   box-sizing: border-box;
   font-size: 14px;
   bottom: 0;
-  margin-right: 5px;
   outline: none;
 }
 .chat-input input:focus {

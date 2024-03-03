@@ -1,5 +1,13 @@
 React & Flask Chat App<br/>
 
+<h2>Features:</h2>
+1. You can Join Rooms and chat with others.
+2. You can send or accept Friend requests and make your chats personal.
+3. You can send emoji's while chatting.
+You can also delete messages, leave rooms, admin can delete room.
+<hr/>
+
+<h2>Dependencies:</h2>
 Requirements (backend):<br/>
 Flask<br/>
 Flask-socketio <br/>
@@ -9,21 +17,15 @@ sqlalchemy <br/>
 passlib <br/>
 pymysql <br/>
 
+Install libraries using pip<br/>
+
 Requirements (frontend):<br/>
 react-router-dom<br/>
 socket.io-client<br/>
 @emotion/react<br/>
 @emotion/styled<br/>
 @mui/material<br/>
+emoji-picker-react<br/>
 
-For frontend:<br/>
 First run `npm i` or `npm install`<br/>
 then run npm i `package-name`<br/>
-
-For backend:<br/>
-Install libraries using pip or your favourite package manager
-
-<br/>
-<h1>Updates:</h1>
-1. You can add friends and keep your chats personal. You can send friend requests, accept them and chat with your friends.<br/>
-2. Migrated from SQLite to MySQL.<br/>

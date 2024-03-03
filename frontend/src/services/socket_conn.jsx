@@ -16,6 +16,10 @@ class Socket {
     return Socket.instance;
   }
 
+  setToken(token) {
+    this.socket.io.opts.query.token = token;
+  }
+
   connect() {
     this.socket.connect();
   }

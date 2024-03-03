@@ -7,7 +7,6 @@ from flask_jwt_extended import (
     jwt_required,
     get_jwt_identity,
 )
-from flask_socketio import emit, join_room, leave_room, rooms
 
 from database import Friends, db, Room, User, AccessToken, FriendRequest
 from utils import generate_unique_code, validate_token
@@ -83,6 +82,7 @@ def login():
     """
     error = None
     if request.method == "POST":
+        print(request.get_json())
         username = request.get_json()["username"]
         password = request.get_json()["password"]
         remember = request.get_json()["rememberMe"]
@@ -191,9 +191,12 @@ def create_room():
     room_name = request.get_json()["room_name"]
     admin = get_jwt_identity()
     room_code = generate_unique_code()
-    Room(room_code=room_code, room_name=room_name, admin=admin).commit_to_db()
-
-    return jsonify({"status": "success", "room_code": room_code}), 200
+    room = Room(room_code=room_code, room_name=room_name, admin=admin)
+    room.commit_to_db()
+    return (
+        jsonify({"status": "success", "room_code": room_code, "room": room.to_dict()}),
+        200,
+    )
 
 
 @api.route("/join_friend", methods=["GET", "POST"])
@@ -220,21 +223,50 @@ def send_friend_request():
     current_userId = get_jwt_identity()
     receiver = User.query.filter_by(username=request.get_json()["receiver"]).first().id
     if request.method == "POST":
-        friend_request = FriendRequest.query.filter_by(
-            sender=current_userId, receiver=receiver
-        ).first()
-        if friend_request is None:
-            friend_request = FriendRequest(sender=current_userId, receiver=receiver)
-            friend_request.commit_to_db()
-            return (
-                jsonify(
-                    {"status": "success", "friend_request": friend_request.to_dict()}
+        friends = (
+            Friends.query.filter(
+                or_(
+                    Friends.user1 == current_userId,
+                    Friends.user2 == current_userId,
                 ),
-                200,
             )
+            .filter(or_(Friends.user1 == receiver, Friends.user2 == receiver))
+            .first()
+        )
+        if friends is None:
+            friend_request = FriendRequest.query.filter(
+                (FriendRequest.sender == current_userId)
+                and (FriendRequest.receiver == receiver)
+                or (FriendRequest.sender == receiver)
+                and (FriendRequest.receiver == current_userId)
+            ).first()
+            if friend_request is None:
+                friend_request = FriendRequest(sender=current_userId, receiver=receiver)
+                friend_request.commit_to_db()
+                return (
+                    jsonify(
+                        {
+                            "status": "success",
+                            "friend_request": friend_request.to_dict(),
+                        }
+                    ),
+                    200,
+                )
+            else:
+                return (
+                    jsonify(
+                        {"status": "error", "message": "Friend request already sent"}
+                    ),
+                    500,
+                )
         else:
             return (
-                jsonify({"status": "error", "message": "Friend request already sent"}),
+                jsonify(
+                    {
+                        "status": "error",
+                        "message": "You are already friends with the user",
+                    }
+                ),
                 500,
             )
 

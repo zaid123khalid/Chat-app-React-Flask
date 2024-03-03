@@ -41,7 +41,9 @@ export default function Chat() {
     "Content-Type": "application/json",
     Authorization: `Bearer ${token}`,
   };
-  const socket = socketInstance.getSocket();
+  var socket = socketInstance;
+  socket.setToken(token);
+  socket = socket.getSocket();
 
   useEffect(() => {
     socket.on("recieved_msg", (data) => {
@@ -187,19 +189,17 @@ export default function Chat() {
   return (
     (document.title = "Chat"),
     (
-      <>
-        <div>
-          <ChatSidebar
-            friendRequests={friendRequests}
-            closeChat_={closeChat}
-            setFriendRequests={setFriendRequests}
-          />
-          {(activeRoom || activeFriend) && <ChatRoom closeChat_={closeChat} />}
-          <div className="no-chat-selected">
-            <h1>Select a chat to start messaging</h1>
-          </div>
+      <div>
+        <ChatSidebar
+          friendRequests={friendRequests}
+          closeChat_={closeChat}
+          setFriendRequests={setFriendRequests}
+        />
+        {(activeRoom || activeFriend) && <ChatRoom closeChat_={closeChat} />}
+        <div className="no-chat-selected">
+          <h1>Select a chat to start messaging</h1>
         </div>
-      </>
+      </div>
     )
   );
 }
